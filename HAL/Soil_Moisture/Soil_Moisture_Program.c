@@ -7,17 +7,18 @@
 /*******************************************************/
 /*******************************************************/
 
-#include "STD_TYPES.h"
-#include "ERROR_STATE.h"
-#include "BIT_MATH.h"
+#include "../../LIB/STD_TYPES.h"
+#include "../../LIB/ERROR_STATE.h"
+#include "../../LIB/BIT_MATH.h"
 
-#include "DIO_Interface.h"
+#include "../../MCAL/DIO/DIO_Interface.h"
 
-#include "ADC_Interface.h"
+#include "../../MCAL/ADC/ADC_Interface.h"
+
 #include "Soil_Moisture_Config.h"
-
-#include "Soil_Moisture_Interface.h"
 #include "Soil_Moisture_Private.h"
+#include "Soil_Moisture_Interface.h"
+
 
 
 
