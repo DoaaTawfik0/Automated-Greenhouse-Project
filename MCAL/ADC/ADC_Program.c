@@ -14,14 +14,44 @@
 
 #include "../../LIB/Interrupt.h"
 
+
 #include "ADC_Interface.h"
 #include "ADC_Confih.h"
 #include "ADC_Private.h"
 #include "ADC_Register.h"
 
 
+/********************************************************************/
+/*                 ProtoTypes fo Static Functions                   */
+/********************************************************************/
+
+static inline ES_t  ADC_enuStartConversion(void);
+
+static inline ES_t  ADC_enuSelectChannel(u8 Copy_u8ChannelID);
+
+static inline ES_t  ADC_enuReadData(u16* Copy_pu16Value);
+
+static inline ES_t  ADC_enuPollingSystem(void);
+
+/********************************************************************/
+/*                 End Of Static ProtoTypes                         */
+/********************************************************************/
+
+
+
+/********************************************************************/
+/*                 Global Variables Decleration                     */
+/********************************************************************/
 volatile static void (* ADC_pfunISRFun)(void*) = NULL;
 volatile static void * ADC_pvidISRParameter = NULL;
+
+/********************************************************************/
+/*                 End Of Global Variables Decleration              */
+/********************************************************************/
+
+
+
+
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -135,103 +165,113 @@ ES_t  ADC_enuInitialize(void)
 	return  Local_enuErrorState;
 }
 
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuStartConversion.                               **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : void.                                                 **/
-/** Functionality   : Start ADC Conversion                                  **/
-/*****************************************************************************/
-/*****************************************************************************/
 
-ES_t  ADC_enuStartConversion(void)
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+/** Function Name   : ADC_enuAsynchAnalogRead.                                                          **/
+/** Return Type     : Error_State enum.                                                                 **/
+/** Arguments       : Copy_u8ChannelID , Copy_pfunNotificationFun , Copy_pvoidAppParameter              **/
+/** Functionality   : Reading Analog Value With Using Interrupt                                         **/
+/*This Function take channel ID to select which Channel We're Working on                                **/
+/*This Function take Pointer to Notificatio Function ,This Function Will run @ ISR to Notificate me tha  \
+  Conversion is Completed                                                                              **/
+/*This Function take Pointer To variable to return Read on It                                          **/
+/********************************************************************************************************/
+/********************************************************************************************************/
+
+ES_t  ADC_enuAsynchAnalogRead(u8 Copy_u8ChannelID , volatile void(*Copy_pfunNotificationFun)(void*) , void* Copy_pvoidAppParameter)
 {
-	ES_t Local_enuErrorState = ES_NOK;
+	ES_t  Local_enuErrorState = ES_NOK;
 
-	SET_BIT(ADCSRA , ADCSRA_ADSC);//start conversion by setting ADSC bit with 1
-	Local_enuErrorState = ES_OK;
-
-	return   Local_enuErrorState;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuPollingSystem.                                 **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : void.                                                 **/
-/** Functionality   : Use Polling System                                    **/
-/*****************************************************************************/
-/*****************************************************************************/
-
-ES_t  ADC_enuPollingSystem(void)
-{
-	ES_t Local_enuErrorState = ES_NOK;
-
-
-	while(GET_BIT(ADCSRA , ADCSRA_ADIF) == 0);//wait on flag
-	CLEAR_BIT(ADCSRA , ADCSRA_ADIF);//Clear Flag BY Sstting bit to 1
-	Local_enuErrorState = ES_OK;
-
-	return   Local_enuErrorState;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuReadHighValue.                                 **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : Copy_pu8Value.                                        **/
-/** Functionality   : Reading High Value AKA  Highest 8 bits from 2 to 9    **/
-/*****************************************************************************/
-/*****************************************************************************/
-
-ES_t  ADC_enuReadHighValue(u8* Copy_pu8Value)
-{
-	ES_t Local_enuErrorState = ES_NOK;
-	if(Copy_pu8Value != NULL)
+	if(Copy_pfunNotificationFun != NULL)
 	{
-		if(ADC_ADJUSTMENT == LEFT_ADJUST)
-		{
-			*Copy_pu8Value = ADCH;
-		}
-		else if(ADC_ADJUSTMENT == RIGHT_ADJUST)
-		{
-			*Copy_pu8Value = (ADCL >> 2);
-			*Copy_pu8Value |= (ADCH << 6);
-		}
-		Local_enuErrorState = ES_OK;
+		/*Selecting ADC Channel*/
+		Local_enuErrorState  = ADC_enuSelectChannel(Copy_u8ChannelID);
+
+		/*Assignment Arguments of this Fun To glopal variables to use them in ISR*/
+		ADC_pfunISRFun = Copy_pfunNotificationFun;
+		ADC_pvidISRParameter = Copy_pvoidAppParameter;
+
+		/*Starting Conversion & This Jop will be Completed When entering ISR*/
+		Local_enuErrorState |= ADC_enuStartConversion();
+
+		/*Enable ADC Interrupt*/
+		Local_enuErrorState |= ADC_enuEnableADCInterrupt();
+
+		/*Reading ADC Value From ADCL&ADCH*/
+		Local_enuErrorState |= ADC_enuReadData((u16*)Copy_pvoidAppParameter);
+
 	}
 	else
 	{
 		Local_enuErrorState = ES_NULL_POINTER;
 	}
 
-	return   Local_enuErrorState;
+	return Local_enuErrorState;
 }
 
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuReadData.                                      **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : Copy_pu16Value.                                       **/
-/** Functionality   : Reading All Ten Bits from 0 to 9                      **/
-/*****************************************************************************/
-/*****************************************************************************/
 
-ES_t  ADC_enuReadData(u16* Copy_pu16Value)
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+/** Function Name   : ADC_enuSynchAnalogRead.                                                           **/
+/** Return Type     : Error_State enum.                                                                 **/
+/** Arguments       : Copy_u8ChannelID , Copy_pu16Value                                                 **/
+/** Functionality   : Reading Analog Value With Using Polling                                           **/
+/* This Function take channel ID to select which Channel We're Working on                                */
+/* This Function take Pointer to u16 variable to return value of ADC On it                               */
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+
+ES_t ADC_enuSynchAnalogRead(u8 Copy_u8ChannelID , u16* Copy_pu16Value)
 {
-	ES_t Local_enuErrorState = ES_NOK;
+
+	ES_t  Local_enuErrorState = ES_NOK;
+
 	if(Copy_pu16Value != NULL)
 	{
-		if(ADC_ADJUSTMENT == LEFT_ADJUST)
-		{
-			*Copy_pu16Value  = (ADCL >> 6);
-			*Copy_pu16Value |= (ADCH << 2);
-		}
-		else if(ADC_ADJUSTMENT == RIGHT_ADJUST)
-		{
-			*Copy_pu16Value = ADCL;
-			*Copy_pu16Value |= ((u16)ADCH << 8);
-		}
+		/*Selecting ADC Channel*/
+		Local_enuErrorState  = ADC_enuSelectChannel(Copy_u8ChannelID);
+
+		/*Starting Conversion & This Jop will be Completed When entering ISR*/
+		Local_enuErrorState |= ADC_enuStartConversion();
+
+		/*Disable Interrupt Mode*/
+		Local_enuErrorState |= ADC_enuDisableADCInterrupt();
+
+		/*Waiting on ADC Complete Conversion Flag to be Set*/
+		Local_enuErrorState |= ADC_enuPollingSystem();
+
+		/*Reading ADC Value From ADCL&ADCH*/
+		Local_enuErrorState |= ADC_enuReadData(Copy_pu16Value);
+	}
+	else
+	{
+		Local_enuErrorState = ES_NULL_POINTER;
+	}
+
+	return Local_enuErrorState;
+
+}
+
+
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+/** Function Name   : ADC_enuGetAnalogValue.                                                            **/
+/** Return Type     : Error_State enum.                                                                 **/
+/** Arguments       : Copy_u16DigitalValue , Copy_pu16ReturnValue                                       **/
+/** Functionality   : Reading Analog Voltage in mv                                                      **/
+/*This Function take digital value which ADC Read & pointer to variable to return analog voltage on it   */
+/*********************************************************************************************************/
+/*********************************************************************************************************/
+
+ES_t  ADC_enuGetAnalogValue(u16 Copy_u16DigitalValue , u16* Copy_pu16ReturnValue)
+{
+
+	ES_t  Local_enuErrorState = ES_NOK;
+
+	if(Copy_pu16ReturnValue != NULL)
+	{
+		*Copy_pu16ReturnValue = (u16)(((u32)Copy_u16DigitalValue*5000UL)/1024UL);
 		Local_enuErrorState = ES_OK;
 	}
 	else
@@ -239,61 +279,8 @@ ES_t  ADC_enuReadData(u16* Copy_pu16Value)
 		Local_enuErrorState = ES_NULL_POINTER;
 	}
 
-	return   Local_enuErrorState;
-}
+	return Local_enuErrorState;
 
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuCallBack.                                      **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : Copy_pfunAppFun , Copy_pvidAppParameter.              **/
-/** Functionality   : Call Back Fun To call App Function                    **/
-/*****************************************************************************/
-/*****************************************************************************/
-
-ES_t  ADC_enuCallBack(volatile void(*Copy_pfunAppFun)(void*) , void* Copy_pvidAppParameter)
-{
-	ES_t Local_enuErrorState = ES_NOK;
-	if(Copy_pfunAppFun != NULL)
-	{
-		ADC_pfunISRFun = Copy_pfunAppFun;
-		ADC_pvidISRParameter = Copy_pvidAppParameter;
-		Local_enuErrorState = ES_OK;
-	}
-	else
-	{
-		Local_enuErrorState = ES_NULL_POINTER;
-	}
-
-	return   Local_enuErrorState;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : ADC_enuSelectChannel.                                 **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : Copy_u8ChannelID                                      **/
-/** Functionality   : Selecting Channel for ADC                             **/
-/*****************************************************************************/
-/*****************************************************************************/
-
-ES_t  ADC_enuSelectChannel(u8 Copy_u8ChannelID)
-{
-	ES_t Local_enuErrorState = ES_NOK;
-
-	ADMUX &= ~0x1f;//clearing first 5 bits
-
-	if(Copy_u8ChannelID >= 0 && Copy_u8ChannelID < 32)
-	{
-		ADMUX |= Copy_u8ChannelID;
-		Local_enuErrorState = ES_OK;
-	}
-	else
-	{
-		Local_enuErrorState = ES_OUT_OF_RANGE;
-	}
-
-	return   Local_enuErrorState;
 }
 
 /*****************************************************************************/
@@ -446,14 +433,14 @@ ES_t  ADC_enuDisable(void)
 
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : ADC_enuEnableInterruptMode.                           **/
+/** Function Name   : ADC_enuEnableADCInterrupt.                            **/
 /** Return Type     : Error_State enum.                                     **/
 /** Arguments       : void                                                  **/
 /** Functionality   : Enable Interrupt Mode                                 **/
 /*****************************************************************************/
 /*****************************************************************************/
 
-ES_t  ADC_enuEnableInterruptMode(void)
+ES_t  ADC_enuEnableADCInterrupt(void)
 {
 	ES_t Local_enuErrorState = ES_NOK;
 
@@ -465,14 +452,14 @@ ES_t  ADC_enuEnableInterruptMode(void)
 
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : ADC_enuDisableInterruptMode.                          **/
+/** Function Name   : ADC_enuDisableADCInterrupt.                           **/
 /** Return Type     : Error_State enum.                                     **/
 /** Arguments       : void                                                  **/
 /** Functionality   : Disable Interrupt Mode                                **/
 /*****************************************************************************/
 /*****************************************************************************/
 
-ES_t  ADC_enuDisableInterruptMode(void)
+ES_t  ADC_enuDisableADCInterrupt(void)
 {
 	ES_t Local_enuErrorState = ES_NOK;
 
@@ -483,12 +470,107 @@ ES_t  ADC_enuDisableInterruptMode(void)
 }
 
 
-/*ISR Fun For ADC*/
+/************************************************************************************/
+/************************************************************************************/
+/*    Static inline Function helps me to Read Data From ADCL & ADCH                 */
+/************************************************************************************/
+/************************************************************************************/
+
+static inline ES_t  ADC_enuReadData(u16* Copy_pu16Value)
+{
+	ES_t Local_enuErrorState = ES_NOK;
+	if(Copy_pu16Value != NULL)
+	{
+		if(ADC_ADJUSTMENT == LEFT_ADJUST)
+		{
+			*((u16*)Copy_pu16Value)  = (ADCL >> 6);
+			*((u16*)Copy_pu16Value) |= (ADCH << 2);
+		}
+		else if(ADC_ADJUSTMENT == RIGHT_ADJUST)
+		{
+			*((u16*)Copy_pu16Value) = ADCL;
+			*((u16*)Copy_pu16Value) |= ((u16)ADCH << 8);
+		}
+		Local_enuErrorState = ES_OK;
+	}
+	else
+	{
+		Local_enuErrorState = ES_NULL_POINTER;
+	}
+
+	return   Local_enuErrorState;
+}
+
+
+/************************************************************************************/
+/************************************************************************************/
+/*    Static inline Function helps me to Start Conversion                           */
+/************************************************************************************/
+/************************************************************************************/
+
+static inline ES_t  ADC_enuStartConversion(void)
+{
+	ES_t Local_enuErrorState = ES_NOK;
+
+	SET_BIT(ADCSRA , ADCSRA_ADSC);//start conversion by setting ADSC bit with 1
+	Local_enuErrorState = ES_OK;
+
+	return   Local_enuErrorState;
+}
+
+
+/************************************************************************************/
+/************************************************************************************/
+/*    Static inline Function helps me to Select ADC Channel                         */
+/************************************************************************************/
+/************************************************************************************/
+
+static inline ES_t  ADC_enuSelectChannel(u8 Copy_u8ChannelID)
+{
+	ES_t Local_enuErrorState = ES_NOK;
+
+	ADMUX &= ~0x1f;//clearing first 5 bits
+
+	if(Copy_u8ChannelID >= 0 && Copy_u8ChannelID < 32)
+	{
+		ADMUX |= Copy_u8ChannelID;
+		Local_enuErrorState = ES_OK;
+	}
+	else
+	{
+		Local_enuErrorState = ES_OUT_OF_RANGE;
+	}
+
+	return   Local_enuErrorState;
+}
+
+
+/************************************************************************************/
+/************************************************************************************/
+/*    Static inline Function helps me to wait on Flag Until it's  Set               */
+/************************************************************************************/
+/************************************************************************************/
+
+static inline ES_t  ADC_enuPollingSystem(void)
+{
+	ES_t Local_enuErrorState = ES_NOK;
+
+	while(GET_BIT(ADCSRA , ADCSRA_ADIF) == 0);//wait on flag
+	CLEAR_BIT(ADCSRA , ADCSRA_ADIF);//Clear Flag BY Setting bit to 1
+	Local_enuErrorState = ES_OK;
+
+	return   Local_enuErrorState;
+}
+
+/************************************************************************************/
+/*                                ISR For ADC                                       */
+/************************************************************************************/
+
 ISR(VECT_ADC)
 {
 	if(ADC_pfunISRFun != NULL)
 	{
-		ADC_pfunISRFun(ADC_pvidISRParameter);
+		ADC_pfunISRFun((u16*)ADC_pvidISRParameter);
 	}
 
 }
