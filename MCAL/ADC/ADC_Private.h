@@ -11,7 +11,7 @@
 #ifndef   ADC_PRIVATE_H_
 #define   ADC_PRIVATE_H_
 
-
+/*Prescalers Definitions In ADC*/
 #define   PRESCALER_2                       10
 #define   PRESCALER_4                       11
 #define   PRESCALER_8                       12
@@ -20,10 +20,12 @@
 #define   PRESCALER_64                      15
 #define   PRESCALER_128                     16
 
+/*Voltage Reference Definitions In ADC*/
 #define   AREF_VOLTAGE                      20
 #define   AVCC_VOLTAGE                      21
 #define   INTERNAL_VOLTAGE                  22
 
+/*Adjustment Typess In ADC*/
 #define   LEFT_ADJUST                       30
 #define   RIGHT_ADJUST                      31
 
