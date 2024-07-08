@@ -19,9 +19,9 @@
 #include  "LED_Interface.h"
 
 
-LED_t LED_AStrConfig[LED_NUM] ={
-		{DIO_PORTA , DIO_PIN0 , LED_SOURCE},
-		{DIO_PORTA , DIO_PIN1 , LED_SINK},
-		{DIO_PORTA , DIO_PIN2 , LED_SOURCE}
+LED_t LED_AStrConfig[LED_NUM] =
+{
+		{DIO_PORTD , DIO_PIN6 , LED_SOURCE},
+		{DIO_PORTD , DIO_PIN7 , LED_SOURCE}
 };
 
