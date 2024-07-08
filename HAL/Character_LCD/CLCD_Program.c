@@ -13,10 +13,10 @@
 
 #include  "../../MCAL/DIO/DIO_Interface.h"
 
-#include  "CLCD_Interface.h"
+
 #include  "CLCD_Config.h"
 #include  "CLCD_Private.h"
-
+#include  "CLCD_Interface.h"
 
 #include  "util/delay.h"
 
