@@ -3,7 +3,7 @@
 /**************   Author: Doaa Tawfik   ***************/
 /**************   Layer:  MCAL          ***************/
 /**************   SWC:    ADC           ***************/
-/**************   Version: 1.00         ***************/
+/**************   Version: 1.2         ***************/
 /******************************************************/
 /******************************************************/
 
@@ -565,7 +565,56 @@ static inline ES_t  ADC_enuPollingSystem(void)
 /************************************************************************************/
 /*                                ISR For ADC                                       */
 /************************************************************************************/
+ES_t ADC_enuStartChainConversion(ADC_Chain_t *Copy_pstrChain )
+{
+	ES_t Local_enuErrorState = ES_NOK;
+	ADC_Channel_t ADC_u8ChainIndex;
+	ADC_Channel_t ADC_pu8LastChianChannel;
+	u8 ADC_u8ChainArrIndex = 100 ;
+	if(Copy_pstrChain == NULL)
+	{
+		Local_enuErrorState = ES_NULL_POINTER;
+	}
 
+	else
+	{
+
+
+
+		/*Bass the copy_chain to global_chain to use in ISR */
+
+		// Bass the first channel
+		ADC_u8ChainIndex = Copy_pstrChain->Chain_FirstChannel;
+
+		// Initiate the array index
+		ADC_u8ChainArrIndex = 0;
+
+		// Bass the last channel
+		ADC_pu8LastChianChannel = Copy_pstrChain->Chain_LastChannel;
+
+		//Bass the array address
+		(Copy_pstrChain-> Chain_ResultArr[ADC_u8ChainArrIndex]) = ADC;
+
+		// Initiate the callback function
+
+
+
+		/*Set the first channel*/
+		ADMUX&=0xE0;
+		ADMUX|=ADC_u8ChainIndex;
+
+		/*Start conversion*/
+		SET_BIT(ADCSRA,ADCSRA_ADSC);
+
+		/*ADC interrupt enable*/
+		SET_BIT(ADCSRA,ADCSRA_ADIE);
+
+	}
+
+
+
+	return Local_enuErrorState;
+}
 ISR(VECT_ADC)
 {
 	if(ADC_pfunISRFun != NULL)
