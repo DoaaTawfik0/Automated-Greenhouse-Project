@@ -13,10 +13,7 @@ ES_t LDR_enuInit(u8 Copy_u8ChanelNumber)
 
 		DIO_enuSetPinDirection(DIO_PORTA,Copy_u8ChanelNumber,INPUT);
 		ADC_enuInitialize();
-		ADC_enuEnable();
 
-
-		ADC_enuEnableTriggeringMode(FREE_RUNNING_MODE);
 		Local_errorState =ES_OK;
 	}
 	else
@@ -27,11 +24,25 @@ ES_t LDR_enuInit(u8 Copy_u8ChanelNumber)
 }
 
 
-ES_t LDR_enuON(u16 Copy_u16DigitalValue,u16 *Copy_pu16ConversionResult)
+ES_t LDR_enuON(u8 Copy_u8Channel_ID , u16 *Copy_pu16ConversionResult)
 {
 	ES_t Local_errorState=ES_NOK;
 
-	ADC_enuGetAnalogValue(Copy_u16DigitalValue ,Copy_pu16ConversionResult);
+	if(Copy_pu16ConversionResult != NULL)
+	{
+		ADC_enuEnable();
+		ADC_enuInitialize();
+		ADC_enuDisableTriggeringMode();
+		ADC_enuSynchAnalogRead(Copy_u8Channel_ID , Copy_pu16ConversionResult);
+		ADC_enuDisable();
+
+		Local_errorState = ES_OK;
+	}
+	else
+	{
+		Local_errorState = ES_NULL_POINTER;
+	}
+
 	return Local_errorState;
 }
 
