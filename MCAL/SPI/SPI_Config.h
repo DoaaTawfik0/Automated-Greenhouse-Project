@@ -14,10 +14,6 @@
 #define   SS_PORT      DIO_PORTB
 #define   SS_PIN       DIO_PIN4
 
-<<<<<<< HEAD
-#define   SPI_STATE    SPI_MASTER
-=======
 
->>>>>>> a2a4c3c30ff1cee76f31c0b391fda441fb059b0f
 
 #endif
