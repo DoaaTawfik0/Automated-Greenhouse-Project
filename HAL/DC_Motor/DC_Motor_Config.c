@@ -7,11 +7,11 @@
 /******************************************************/
 /******************************************************/
 
-#include  "../../LIB/STD_TYPES.h"
-#include  "../../LIB/ERROR_STATE.h"
-#include  "../../LIB/BIT_MATH.h"
+#include  "STD_TYPES.h"
+#include  "ERROR_STATE.h"
+#include  "BIT_MATH.h"
 
-#include  "../../MCAL/DIO/DIO_Interface.h"
+#include  "DIO_Interface.h"
 
 #include  "DC_Motor_Config.h"
 #include  "DC_Motor_Private.h"

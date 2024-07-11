@@ -12,6 +12,7 @@
 #define   DC_MOTOR_INTERFACE_H_
 
 
+#include "ERROR_STATE.h"
 #include "DC_Motor_Config.h"
 
 #define     MOTOR_NUM       6
