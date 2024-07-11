@@ -11,7 +11,7 @@
 #include "../../LIB/STD_TYPES.h"
 #include "../../LIB/BIT_MATH.h"
 
-#include "../Interrupt.h"
+//#include "../Interrupt.h"
 
 #include "UART_Register.h"
 #include "UART_Interface.h"
