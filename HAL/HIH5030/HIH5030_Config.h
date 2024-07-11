@@ -11,7 +11,8 @@
 #ifndef  HIH5030_CONFIG_H_
 #define  HIH5030_CONFIG_H_
 
-
+#define  HUMIDITY_PORT     DIO_PORTA
+#define  HUMIDITY_PIN      DIO_PIN3
 
 
 #endif

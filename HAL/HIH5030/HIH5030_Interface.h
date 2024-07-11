@@ -12,24 +12,11 @@
 #define  HIH5030_INTERFACE_H_
 
 
-enum HIH5030_Status_t
-{
-	HIH5030_Ok,
-	HIH5030_Error_Humidity,
-	HIH5030_Error_Checksum,
-	HIH5030_Error_Timeout
-};
-
 //-----------------------------------------//
-
 //----- Prototypes---------------------------//
-enum HIH5030_Status_t Init_HIH5030();
-u16 Get_Analog_Data ();
-u16 Get_hum_Data ();
+ES_t  HIH5030_enuInit(void);
+ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue);
 //-------------------------------------------//
-
-
-
 
 
 

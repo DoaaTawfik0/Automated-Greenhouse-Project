@@ -22,71 +22,68 @@
 #include "HIH5030_Interface.h"
 
 
-//#define   DHT11_PORT_ID          DIO_PORTA
-//#define   DHT11_PIN_ID           DIO_PIN7
-
-//---------------------------------------------//
-
-//----- Functions -----------------------------//
-
- static u16 x_HIH5030 ,voltage_HIH5030,humidity_HIH5030 ;
-
 
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : Init_HIH5030.                                         **/
-/** Return Type     : DHT_Status_t.                                         **/
+/** Function Name   : HIH5030_enuInit.                                      **/
+/** Return Type     : ES_t.                                                 **/
 /** Arguments       : void.                                                 **/
 /** Functionality   : Setup sensor.                                         **/
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-enum HIH5030_Status_t Init_HIH5030(){
-	DIO_enuSetPinDirection(DIO_PORTA , DIO_PIN0 , INPUT);
-	ADC_enuEnable();
-	ADC_enuInitialize();
+ES_t  HIH5030_enuInit(void)
+{
+	ES_t  Local_enuErrorState = ES_NOK;
 
-	ADC_enuDisableTriggeringMode();
+	Local_enuErrorState  = DIO_enuSetPinDirection(HUMIDITY_PORT , HUMIDITY_PIN , INPUT);
+	Local_enuErrorState |= ADC_enuEnable();
+	Local_enuErrorState |= ADC_enuInitialize();
 
-}
+	Local_enuErrorState |= ADC_enuDisableTriggeringMode();
 
-/*****************************************************************************/
-/*****************************************************************************/
-/** Function Name   : Get_Analog_Data.                                      **/
-/** Return Type     : u16.                                                  **/
-/** Arguments       : void.                                                 **/
-/** Functionality   : Get Analog Data..                                     **/
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-
-u16 Get_Analog_Data (){//chanel
-	
-	ADC_enuSynchAnalogRead(3, &x_HIH5030);
-	voltage_HIH5030 = ((x_HIH5030 * 5.0 * 1000) / 1024.0);
-	return voltage_HIH5030;
-
+	return Local_enuErrorState;
 }
 
 
+
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : Get_Tem_Data.                                         **/
-/** Return Type     : u32.                                                  **/
+/** Function Name   : HIH5030_enuGet_Hum_Data.                              **/
+/** Return Type     : Copy_u8Channel_ID , Copy_pu16RetValue.                **/
 /** Arguments       : void.                                                 **/
 /** Functionality   : Get humidity Data..                                   **/
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-u16 Get_hum_Data (){
+ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue)
+{
+	ES_t  Local_enuErrorState = ES_NOK;
 
-	u16 data=Get_Analog_Data ();
-	humidity_HIH5030 = ((data - 756)/31.64) ;
-	return humidity_HIH5030;
+	u16 Local_u16Adc_Val , Local_u16AnalogVolt;
 
+	if(Copy_pu16RetValue != NULL)
+	{
+		ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Adc_Val);
+		Local_u16AnalogVolt = ((Local_u16Adc_Val * 5.0 * 1000) / 1024.0);
+
+		*Copy_pu16RetValue = ((Local_u16AnalogVolt - 756)/31.64) ;
+
+
+		Local_enuErrorState = ES_OK;
+	}
+	else
+	{
+		Local_enuErrorState = ES_NULL_POINTER;
+	}
+
+	return Local_enuErrorState;
 
 }
+
+
+
 
 
