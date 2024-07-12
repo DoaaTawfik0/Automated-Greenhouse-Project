@@ -38,10 +38,10 @@ ES_t  HIH5030_enuInit(void)
 	ES_t  Local_enuErrorState = ES_NOK;
 
 	Local_enuErrorState  = DIO_enuSetPinDirection(HUMIDITY_PORT , HUMIDITY_PIN , INPUT);
-	Local_enuErrorState |= ADC_enuEnable();
-	Local_enuErrorState |= ADC_enuInitialize();
 
-	Local_enuErrorState |= ADC_enuDisableTriggeringMode();
+	//Local_enuErrorState |= ADC_enuInitialize();
+
+
 
 	return Local_enuErrorState;
 }
@@ -62,6 +62,8 @@ ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue)
 {
 	ES_t  Local_enuErrorState = ES_NOK;
 
+	 ADC_enuEnable();
+	 ADC_enuDisableTriggeringMode();
 	u16 Local_u16Adc_Val , Local_u16AnalogVolt;
 
 	if(Copy_pu16RetValue != NULL)
@@ -71,7 +73,7 @@ ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue)
 
 		*Copy_pu16RetValue = ((Local_u16AnalogVolt - 756)/31.64) ;
 
-
+		ADC_enuDisable();
 		Local_enuErrorState = ES_OK;
 	}
 	else

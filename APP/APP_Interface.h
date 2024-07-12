@@ -9,9 +9,8 @@
 #define APP_INTERFACE_H_
 
 
+ES_t  APP_enuMainWhile_Fun(void);
 ES_t  APP_enuMain_Fun(void);
-
-
 
 
 

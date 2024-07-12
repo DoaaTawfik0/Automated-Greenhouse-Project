@@ -58,7 +58,7 @@ ES_t  LM35_enuGetTemperature(u8 Copy_u8Channel_ID  , u8* Copy_pu8TempValue)
 	u16 Local_u16Digital_Value , Local_u16Analog_Value;
 
 	ADC_enuEnable();
-	ADC_enuInitialize();
+	//ADC_enuInitialize();
 	ADC_enuDisableTriggeringMode();
 	ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Digital_Value);
 	ADC_enuGetAnalogValue(Local_u16Digital_Value , &Local_u16Analog_Value);

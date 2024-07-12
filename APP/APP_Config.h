@@ -17,7 +17,8 @@
 
 
 
-#define   SPI_STATE            SPI_SLAVE
+#define   SPI_STATE            SPI_MASTER
+
 
 
 
