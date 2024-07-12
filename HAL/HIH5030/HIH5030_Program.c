@@ -1,8 +1,8 @@
 /******************************************************/
 /******************************************************/
-/**************   Author: Doaa Tawfik   ***************/
+/**************   Author: mahmoud 3id   ***************/
 /**************   Layer:  HAL           ***************/
-/**************   SWC:    LM35          ***************/
+/**************   SWC:    HIH5030       ***************/
 /**************   Version: 1.00         ***************/
 /******************************************************/
 /******************************************************/
@@ -15,58 +15,67 @@
 
 #include "../../MCAL/ADC/ADC_Interface.h"
 
+#include "util/delay.h"
 
-#include "LM35_Private.h"
-#include "LM35_Config.h"
-#include "LM35_Interface.h"
+#include "HIH5030_Private.h"
+#include "HIH5030_Config.h"
+#include "HIH5030_Interface.h"
+
 
 
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : LM35_enuInitialize.                                   **/
-/** Return Type     : Error_State enum.                                     **/
+/** Function Name   : HIH5030_enuInit.                                      **/
+/** Return Type     : ES_t.                                                 **/
 /** Arguments       : void.                                                 **/
-/** Functionality   : Initializing Lm35 Sensor (Config of pin)              **/
+/** Functionality   : Setup sensor.                                         **/
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-ES_t  LM35_enuInitialize(void)
+ES_t  HIH5030_enuInit(void)
 {
-	ES_t Local_enuErrorState   = ES_NOK;
+	ES_t  Local_enuErrorState = ES_NOK;
 
-	Local_enuErrorState = DIO_enuSetPinDirection(LM35_PORT_ID , LM35_PIN_ID , INPUT);
+	Local_enuErrorState  = DIO_enuSetPinDirection(HUMIDITY_PORT , HUMIDITY_PIN , INPUT);
 
-	return  Local_enuErrorState;
+	//Local_enuErrorState |= ADC_enuInitialize();
+
+
+
+	return Local_enuErrorState;
 }
 
 
+
 /*****************************************************************************/
 /*****************************************************************************/
-/** Function Name   : LM35_enuGetTemperature.                               **/
-/** Return Type     : Error_State enum.                                     **/
-/** Arguments       : Copy_u8Channel_ID , Copy_pu8TempValue.                **/
-/** Functionality   : Getting Temperature of Sensor                         **/
+/** Function Name   : HIH5030_enuGet_Hum_Data.                              **/
+/** Return Type     : Copy_u8Channel_ID , Copy_pu16RetValue.                **/
+/** Arguments       : void.                                                 **/
+/** Functionality   : Get humidity Data..                                   **/
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-ES_t  LM35_enuGetTemperature(u8 Copy_u8Channel_ID  , u8* Copy_pu8TempValue)
+ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue)
 {
-	ES_t Local_enuErrorState = ES_NOK;
+	ES_t  Local_enuErrorState = ES_NOK;
 
-	u16 Local_u16Digital_Value , Local_u16Analog_Value;
+	u16 Local_u16Adc_Val , Local_u16AnalogVolt;
 
-	ADC_enuEnable();
-	//ADC_enuInitialize();
-	ADC_enuDisableTriggeringMode();
-	ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Digital_Value);
-	ADC_enuGetAnalogValue(Local_u16Digital_Value , &Local_u16Analog_Value);
-	ADC_enuDisable();
-
-	if(Copy_pu8TempValue != NULL)
+	if(Copy_pu16RetValue != NULL)
 	{
-		*Copy_pu8TempValue = (u8)((Local_u16Analog_Value)/10);
+		ADC_enuEnable();
+		//ADC_enuInitialize();
+		ADC_enuDisableTriggeringMode();
+		ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Adc_Val);
+		ADC_enuDisable();
+
+		Local_u16AnalogVolt = ((Local_u16Adc_Val * 5.0 * 1000) / 1024.0);
+
+		*Copy_pu16RetValue = ((Local_u16AnalogVolt - 756)/31.64) ;
+
 
 		Local_enuErrorState = ES_OK;
 	}
@@ -76,4 +85,10 @@ ES_t  LM35_enuGetTemperature(u8 Copy_u8Channel_ID  , u8* Copy_pu8TempValue)
 	}
 
 	return Local_enuErrorState;
+
 }
+
+
+
+
+

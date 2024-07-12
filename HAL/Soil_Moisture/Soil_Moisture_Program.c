@@ -63,7 +63,7 @@ ES_t  SoilMoisture_enuGetPercentage(u8 Copy_u8Channel_ID  , u8* Copy_pu8RetValue
 	{
 		/*Using ADC Peripheral to read values from Sensor*/
 		ADC_enuEnable();
-		ADC_enuInitialize();
+		//ADC_enuInitialize();
 		ADC_enuDisableTriggeringMode();
 		ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Digital_Value);
 		ADC_enuDisable();
