@@ -62,18 +62,21 @@ ES_t  HIH5030_enuGet_Hum_Data(u8 Copy_u8Channel_ID , u16* Copy_pu16RetValue)
 {
 	ES_t  Local_enuErrorState = ES_NOK;
 
-	 ADC_enuEnable();
-	 ADC_enuDisableTriggeringMode();
 	u16 Local_u16Adc_Val , Local_u16AnalogVolt;
 
 	if(Copy_pu16RetValue != NULL)
 	{
+		ADC_enuEnable();
+		//ADC_enuInitialize();
+		ADC_enuDisableTriggeringMode();
 		ADC_enuSynchAnalogRead(Copy_u8Channel_ID , &Local_u16Adc_Val);
+		ADC_enuDisable();
+
 		Local_u16AnalogVolt = ((Local_u16Adc_Val * 5.0 * 1000) / 1024.0);
 
 		*Copy_pu16RetValue = ((Local_u16AnalogVolt - 756)/31.64) ;
 
-		ADC_enuDisable();
+
 		Local_enuErrorState = ES_OK;
 	}
 	else

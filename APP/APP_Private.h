@@ -25,4 +25,6 @@
 #define    LDR_LED_ON   6
 #define    LDR_LED_OFF  7
 
+#define    HEATER_FAN_OFF  10
+
 #endif

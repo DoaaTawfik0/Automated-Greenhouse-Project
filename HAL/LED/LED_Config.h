@@ -12,7 +12,7 @@
 #define  LED_CONFIG_H_
 
 
-#define     LED_NUM       2
+#define     LED_NUM       5
 
 typedef struct
 {

@@ -14,7 +14,7 @@
 
 #include "DC_Motor_Config.h"
 
-#define     MOTOR_NUM       6
+#define     MOTOR_NUM       3
 
 ES_t   DC_MOTOR_enuInitialize(DC_MOTOR_t *Copy_PStrMotorConfig);
 

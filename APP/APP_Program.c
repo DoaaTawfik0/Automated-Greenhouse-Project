@@ -35,6 +35,10 @@
 #include "APP_Private.h"
 #include "APP_Config.h"
 
+//###########################################33333/
+#include "../MCAL/DIO/DIO_Register.h"
+//#############################################33
+
 /********************************************************************/
 /*                 ProtoTypes for Static Functions                 */
 /*******************************************************************/
@@ -74,14 +78,18 @@ static u8 SPI_Recive_value;
 
 ES_t  APP_enuMain_Fun(void)
 {
+	ES_t  Local_enuErrorState = ES_NOK;
+
 #if SPI_STATE == SPI_MASTER
 	/*1-Make Master Initialization*/
 
-	APP_enuMaster_Init();
+	Local_enuErrorState = APP_enuMaster_Init();
 #elif SPI_STATE == SPI_SLAVE
 	/*Make Slave Initialization*/
-	APP_enuSlave_Init();
+	Local_enuErrorState = APP_enuSlave_Init();
 #endif
+
+	return Local_enuErrorState;
 }
 
 
@@ -117,48 +125,48 @@ ES_t  APP_enuMainWhile_Fun(void)
 	_delay_ms(200);
 	CLCD_enuClearDisplay();
 
-	/********************************************SOIL END***************************************/
-
-	/*2-Activate Channels in a Periodic way to get Readings*/
-	/******************************************** LDR **********************************/
-
-	LDR_enuON(1 , &u16LDR_Read);
-
-	/*3-Print Readings on Character LCD*/
-
-	CLCD_enuSendString("LDR = ");
-	CLCD_enuWriteNumber(u16LDR_Read);
-
-	/*4-Check on Readings if in range send some value to Slave to enable specific Actuators*/
-
-	LDR_enuCheckRange(u16LDR_Read);
-
-	/*5-For handling Display */
-	_delay_ms(200);
-	CLCD_enuClearDisplay();
-
-	/********************************************LDR END***************************************/
-
-	/*2-Activate Channels in a Periodic way to get Readings*/
-	/******************************************** TEMP+HUMIDITY **********************************/
-
-	LM35_enuGetTemperature(2 , &u8LM35_Read);
-
-	/*3-Print Readings on Character LCD*/
-
-		CLCD_enuSendString("LM35 = ");
-		CLCD_enuWriteNumber(u8LM35_Read);
-		CLCD_enuGoToXY(1 , 0);
-		HIH5030_enuGet_Hum_Data(3 , &u16HIH_Read);
-		CLCD_enuSendString("Humidity = ");
-		CLCD_enuWriteNumber(u16HIH_Read);
-	/*4-Check on Readings if in range send some value to Slave to enable specific Actuators*/
-
-	LDR_enuCheckRange(u16LDR_Read);
-
-	/*5-For handling Display */
-	_delay_ms(200);
-	CLCD_enuClearDisplay();
+	//	/********************************************SOIL END***************************************/
+	//
+	//	/*2-Activate Channels in a Periodic way to get Readings*/
+	//	/******************************************** LDR **********************************/
+	//
+	//	LDR_enuON(1 , &u16LDR_Read);
+	//
+	//	/*3-Print Readings on Character LCD*/
+	//
+	//	CLCD_enuSendString("LDR = ");
+	//	CLCD_enuWriteNumber(u16LDR_Read);
+	//
+	//	/*4-Check on Readings if in range send some value to Slave to enable specific Actuators*/
+	//
+	//	LDR_enuCheckRange(u16LDR_Read);
+	//
+	//	/*5-For handling Display */
+	//	_delay_ms(200);
+	//	CLCD_enuClearDisplay();
+	//
+	//	/********************************************LDR END***************************************/
+	//
+	//	/*2-Activate Channels in a Periodic way to get Readings*/
+	//	/******************************************** TEMP+HUMIDITY **********************************/
+	//
+	//	LM35_enuGetTemperature(2 , &u8LM35_Read);
+	//
+	//	/*3-Print Readings on Character LCD*/
+	//
+	//		CLCD_enuSendString("LM35 = ");
+	//		CLCD_enuWriteNumber(u8LM35_Read);
+	//		CLCD_enuGoToXY(1 , 0);
+	//		HIH5030_enuGet_Hum_Data(3 , &u16HIH_Read);
+	//		CLCD_enuSendString("Humidity = ");
+	//		CLCD_enuWriteNumber(u16HIH_Read);
+	//	/*4-Check on Readings if in range send some value to Slave to enable specific Actuators*/
+	//
+	//	LDR_enuCheckRange(u16LDR_Read);
+	//
+	//	/*5-For handling Display */
+	//	_delay_ms(200);
+	//	CLCD_enuClearDisplay();
 
 	/********************************************TEMP+HUMIDITY END***************************************/
 
@@ -171,7 +179,8 @@ ES_t  APP_enuMainWhile_Fun(void)
 	/***************************This Should be done in while one********************/
 
 	/*2-Read From Master & based on value take an action*/
-	APP_enuSlave_Init();
+	//APP_enuSlave_Init();
+	SPI_enuSlaveASyncReceive(Display , &SPI_Recive_value);
 	/*enable [Actuators/Alerts]*/
 	SPI_enuCheckAction();
 
@@ -230,6 +239,8 @@ static ES_t  APP_enuSlave_Init(void)
 {
 	ES_t  Local_enuErrorState = ES_NOK;
 
+	GIE_enuEnable();
+
 	/******************************************** SPI **********************************/
 	/*1-Initialize Motors->Slave->look@ DC_Motor_Config.c*/
 	DC_MOTOR_enuInitialize(&DC_MOTOR_AStrConfig[0]);
@@ -253,27 +264,33 @@ static ES_t  APP_enuSlave_Init(void)
 static ES_t SPI_enuCheckAction(void)
 {
 	ES_t Local_ErrorState=ES_NOK;
+
+//	DIO_enuSetPortDirection(DIO_PORTA , OUTPUT);
+//	DIO_enuSetPortValue(DIO_PORTA , SPI_Recive_value);
+
+	//SPI_Recive_value = 2;
+
 	if(SPI_Recive_value == FANS_ON)
 	{
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[0]);
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[1]);
 	}
-	else if(SPI_Recive_value == FANS_OFF)
+	if(SPI_Recive_value == FANS_OFF)
 	{
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[0]);
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
 	}
-	else if(SPI_Recive_value == PUMPS_ON)
+	if(SPI_Recive_value == PUMPS_ON)
 	{
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[2]);
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[3]);
 	}
-	else if(SPI_Recive_value == PUMPS_OFF)
+	if(SPI_Recive_value == PUMPS_OFF)
 	{
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[2]);
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[3]);
 	}
-	else if(SPI_Recive_value == HEATERS_ON)
+	if(SPI_Recive_value == HEATERS_ON)
 	{
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[4]);
 		DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[5]);
@@ -283,31 +300,32 @@ static ES_t SPI_enuCheckAction(void)
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[4]);
 		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[5]);
 	}
-	else if(SPI_Recive_value == LDR_LED_ON)
+	if(SPI_Recive_value == LDR_LED_ON)
 	{
 		LED_enuTurn_LED_ON(&LED_AStrConfig[0]);
 		LED_enuTurn_LED_ON(&LED_AStrConfig[1]);
 	}
-	else if(SPI_Recive_value == LDR_LED_OFF)
+	if(SPI_Recive_value == LDR_LED_OFF)
 	{
 		LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
 		LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
 	}
-	else
-	{
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[0]);
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[2]);
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[3]);
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[4]);
-		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[5]);
-
-		LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
-		LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
-	}
+	//	else
+		//	{
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[0]);
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[2]);
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[3]);
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[4]);
+	//		DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[5]);
+	//
+	//		LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
+	//		LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
+	//	}
 
 	return Local_ErrorState;
 }
+
 static ES_t SOIL_enuCheckRange(u8 Copy_u8RangeVal)
 {
 	ES_t Local_enuErrorState = ES_NOK;
@@ -393,7 +411,9 @@ static ES_t LM_HIH_enuCheckRange(u8 Copy_u8RangeVal, u16 Copy_u16RangeVal)
 	}
 	return Local_enuErrorState;
 }
-void Display(void)
-{
-	//TOGGLE_BIT(PORTA , 0);
-}
+
+//void Display(void)
+//{
+////	DIO_enuSetPortDirection(DIO_PORTA , OUTPUT);
+////	TOGGLE_BIT(PORTA , 0);
+//}
