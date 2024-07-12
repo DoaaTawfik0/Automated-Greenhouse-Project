@@ -25,14 +25,10 @@
 
 #include "APP_Interface.h"
 #include "APP_Private.h"
-
-
-/*###################################################################*/
 #include "APP_Config.h"
-#include "../MCAL/DIO/DIO_Register.h"
-void Display(void);
-/*###################################################################*/
 
+
+void Display(void);
 
 
 /********************************************************************/
@@ -55,45 +51,56 @@ int main()
 	GIE_enuEnable();
 
 
-
-
-
-
 #if  SPI_STATE == SPI_MASTER
 
-	SPI_enuMasterInit(SPI_POLLING);
-	ADC_enuInitialize();
-	SoilMoisture_enuInitialize();
-	LM35_enuInitialize();
-	HIH5030_enuInit();
-	LDR_enuInit(1);
-	CLCD_enuInitialize();
 
+	/*1-Initialize SPI as Mater->look@ SPI_Config.h*/
+	SPI_enuMasterInit(SPI_POLLING);
+	/*2-Initialize ADC->Master->look@ADC_Interface.h*/
+	ADC_enuInitialize();
+	/*3-Initialize Soil Moisture->Master->look@ Soil_Moisture_Config.h*/
+	SoilMoisture_enuInitialize();
+	/*4-Initialize LM35 Sensor*/
+	LM35_enuInitialize();
+	/*5-Initialize HIH5030 Sensor*/
+	HIH5030_enuInit();
+	/*6-Initialize LDR->Master->look@ LDR_Config.h*/
+	LDR_enuInit(1);
+	/*7-Initialize Character LCD->Master->look@ CLCD_Config.h*/
+	CLCD_enuInitialize();
+	/*8-Initialize LEDS*/
 	LED_enuInitialize(&LED_AStrConfig[2]);
 	LED_enuInitialize(&LED_AStrConfig[3]);
 	LED_enuInitialize(&LED_AStrConfig[4]);
 
+	/*Turn off all actuators*/
+	LED_enuTurn_LED_OFF(&LED_AStrConfig[2]);
+	LED_enuTurn_LED_OFF(&LED_AStrConfig[3]);
+	LED_enuTurn_LED_OFF(&LED_AStrConfig[4]);
 
 #elif SPI_STATE == SPI_SLAVE
 
+	/*1-Initialize SPI as Slave->look@ SPI_Config.h*/
 	SPI_enuSlaveInit(SPI_POLLING);
 
-
+	/*2-Initialize Motors->Slave->look@ DC_Motor_Config.c*/
 	DC_MOTOR_enuInitialize(&DC_MOTOR_AStrConfig[0]);
 	DC_MOTOR_enuInitialize(&DC_MOTOR_AStrConfig[1]);
 	DC_MOTOR_enuInitialize(&DC_MOTOR_AStrConfig[2]);
 
+	/*3-Initialize LEDS->Slave->look@ LED_Config.c*/
 	LED_enuInitialize(&LED_AStrConfig[0]);
 	LED_enuInitialize(&LED_AStrConfig[1]);
 
-
-
-
+	/*Turn Off all actuators*/
+	DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[0]);
+	DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
+	DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[2]);
+	LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
+	LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
 
 #else
 #endif
-
-
 
 
 
@@ -103,11 +110,7 @@ int main()
 #if  SPI_STATE == SPI_MASTER
 
 
-
-
-		//################################################  LDR      ###########################
-
-
+        /*Check on LDR Sensor*/
 		LDR_enuON(1 , &Local_u16LDR);
 		CLCD_enuSendString("LDR = ");
 		CLCD_enuWriteNumber(Local_u16LDR);
@@ -115,41 +118,26 @@ int main()
 		if(Local_u16LDR < 512)
 		{
 			SPI_enuMasterTransmit(SPI_POLLING , LDR_LED_ON);
-			//			LED_enuTurn_LED_ON(&LED_AStrConfig[0]);
-			//			LED_enuTurn_LED_ON(&LED_AStrConfig[1]);
-
 		}
 		else
 		{
 			SPI_enuMasterTransmit(SPI_POLLING , LDR_LED_OFF);
-			//			LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
-			//			LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
 		}
 
 		_delay_ms(200);
 		CLCD_enuClearDisplay();
 
-		//		/********************************************SOIL Moisture**********************************/
 
-
+		/*Check on Soil Moisture Sensor*/
 		SoilMoisture_enuGetPercentage(0 , &Local_u8SoilMoisture);
 		CLCD_enuSendString("SOIL = ");
 		CLCD_enuWriteNumber(Local_u8SoilMoisture);
 
-		/*moTORS ON*/
 		if((Local_u8SoilMoisture >= 30) && (Local_u8SoilMoisture < 60))
 		{
-			//DC_MOTOR_enuTurnRight(&DC_MOTOR_AStrConfig[1]);
 			SPI_enuMasterTransmit(SPI_POLLING , PUMPS_ON);
 			LED_enuTurn_LED_OFF(&LED_AStrConfig[3]);
-			//DIO_enuSetPinValue((DIO_PORTD , DIO_PIN4 , LOW);
 		}
-		//		else if((Local_u8SoilMoisture >= 60) && (Local_u8SoilMoisture < 80))
-		//		{
-		//			//DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
-		//			SPI_enuMasterTransmit(SPI_POLLING , PUMPS_OFF);
-		//			//DIO_enuSetPinValue((DIO_PORTD , DIO_PIN4 , LOW);
-		//		}
 		else
 		{
 			SPI_enuMasterTransmit(SPI_POLLING , PUMPS_OFF);
@@ -161,15 +149,13 @@ int main()
 			{
 				LED_enuTurn_LED_OFF(&LED_AStrConfig[3]);
 			}
-			//DIO_enuSetPinDirection(DIO_PORTD , DIO_PIN4 , OUTPUT);
-			//DIO_enuSetPinValue((DIO_PORTD , DIO_PIN4 , HIGH);
 		}
 
 		_delay_ms(200);
 		CLCD_enuClearDisplay();
 
-		//		//############################################################LM35
-		//
+
+		/*Check on LM35 Sensor*/
 		LM35_enuGetTemperature(2 , &Local_u8LM35);
 		CLCD_enuSendString("LM35 = ");
 		CLCD_enuWriteNumber(Local_u8LM35);
@@ -195,12 +181,14 @@ int main()
 		{
 			SPI_enuMasterTransmit(SPI_POLLING , HEATER_FAN_OFF);
 			LED_enuTurn_LED_ON(&LED_AStrConfig[4]);
-			//			DIO_enuSetPinValue(DIO_PORTD,DIO_PIN4,HIGH);
 		}
 
 		_delay_ms(200);
 		CLCD_enuClearDisplay();
-		//#########################################################Humidity
+
+
+
+		/*Check on Humidity Sensor*/
 		//		HIH5030_enuGet_Hum_Data(3 , &Local_u16HIH);
 		//		CLCD_enuSendString("Humidity = ");
 		//		CLCD_enuWriteNumber(Local_u16HIH);
@@ -224,73 +212,9 @@ int main()
 
 
 
-
-
-
-
-
-
-
-
-
-		//########################################################### TEMP+HUMIDITY#################################//
-
-		//		LM35_enuGetTemperature(2 , &Val);
-		//		HIH5030_enuGet_Hum_Data(3 , &Local_u16HIH);
-		//		CLCD_enuSendString("LM35 = ");
-		//		CLCD_enuWriteNumber(Val);
-		//		CLCD_enuGoToXY(1 , 0);
-		//		CLCD_enuSendString("Humidity = ");
-		//		CLCD_enuWriteNumber(Local_u16HIH);
-		//
-		//		if((Val >= 15) && (Val <= 30))
-		//		{
-		//			if(Val < 18)
-		//			{
-		//				SPI_enuMasterTransmit(SPI_POLLING , HEATERS_ON);
-		//			}
-		//			else if(Val > 25)
-		//			{
-		//				SPI_enuMasterTransmit(SPI_POLLING , FANS_ON);
-		//			}
-		//			else
-		//			{
-		//				SPI_enuMasterTransmit(SPI_POLLING , HEATERS_OFF);
-		//				_delay_ms(500);
-		//				SPI_enuMasterTransmit(SPI_POLLING , FANS_OFF);
-		//			}
-		//
-		//		}
-		//		else
-		//		{
-		//			DIO_enuSetPinValue(DIO_PORTD,DIO_PIN4,HIGH);
-		//		}
-		//		if(Local_u16HIH < 80)
-		//		{
-		//			if(Local_u16HIH > 60)
-		//			{
-		//				SPI_enuMasterTransmit(SPI_POLLING , FANS_ON);
-		//			}
-		//		}
-		//		else
-		//		{
-		//			//Turn on Alert/
-		//		}
-		//
-		//
-		//		_delay_ms(200);
-		//		CLCD_enuClearDisplay();
-
-		//############################################################################################//
-
-
-
-
-
-
 #elif SPI_STATE == SPI_SLAVE
 
-
+		/*Read Value from SPI*/
 		SPI_enuSlaveASyncReceive(Display , &Val);
 
 		if(Val == HEATER_FAN_OFF)
@@ -332,24 +256,11 @@ int main()
 			LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
 			LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
 		}
-		//		else
-		//		{
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[0]);
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[1]);
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[2]);
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[3]);
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[4]);
-		//			DC_MOTOR_enuStop(&DC_MOTOR_AStrConfig[5]);
-		//
-		//			LED_enuTurn_LED_OFF(&LED_AStrConfig[0]);
-		//			LED_enuTurn_LED_OFF(&LED_AStrConfig[1]);
-		//		}
-
 
 #else
 
 
-#error "SPI "
+#error "SPI is out of range"
 #endif
 
 
@@ -362,37 +273,10 @@ int main()
 void Display(void)
 {
 	DIO_enuSetPortDirection(DIO_PORTA , OUTPUT);
-	DIO_enuSetPortValue(DIO_PORTA , 5);
+	DIO_enuTogglePortValue(DIO_PORTA);
 }
 
 
 
-
-
-
-
-
-
-
-
-
-//#include "../LIB/ERROR_STATE.h"
-//#include "APP_Interface.h"
-//
-//
-//
-//
-//int main()
-//{
-//		APP_enuMain_Fun();
-//
-//	while(1)
-//	{
-//
-//		 APP_enuMainWhile_Fun();
-//
-//	}
-//	return 0;
-//}
 
 
