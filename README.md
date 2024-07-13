@@ -1,6 +1,4 @@
-# 👨🏻‍💻Automated-Greenhouse-Project🏡
-
-
+# 👨🏻‍💻Automated-Greenhouse-Project
 --
 
 ## Overview
@@ -16,7 +14,7 @@ The Greenhouse Project is an embedded system designed to automate the control of
 - **LDR Sensor**: Detects light levels to determine day/night cycles.
 - **LEDs**: Turn on during the night to provide artificial lighting.
 - **LCD Display**: Displays all sensor measurements in real-time.
-
+- **Alarm**: For integating any error
 ## Features
 1. **Temperature Control**:
    - The LM35 sensor continuously monitors the temperature.
@@ -33,6 +31,8 @@ The Greenhouse Project is an embedded system designed to automate the control of
 
 4. **Real-Time Monitoring**:
    - The LCD display shows real-time measurements from all sensors, allowing for easy monitoring of the greenhouse conditions.
+
+5. **Alarm**: For integating any error or emegency state such that temperature below 15 or upper 30
 
 ## Installation
 1. **Hardware Setup**:
