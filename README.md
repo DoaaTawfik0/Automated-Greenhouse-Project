@@ -1,9 +1,7 @@
-# 👨🏻‍💻Automated-Greenhouse-Project🏡🏡🌴
-Sure! Here's an updated README file for your Greenhouse Project:
-
----
+# 👨🏻‍💻Automated-Greenhouse-Project🏡
 
 
+--
 
 ## Overview
 The Greenhouse Project is an embedded system designed to automate the control of environmental conditions within a greenhouse. This project utilizes two microcontrollers to manage temperature, humidity, and lighting, ensuring optimal conditions for plant growth.
@@ -45,6 +43,16 @@ The Greenhouse Project is an embedded system designed to automate the control of
    - Upload the provided code to the microcontrollers.
    - Ensure the microcontrollers are properly programmed to handle the sensor inputs and control the actuators.
 
+## GitHub Code Links
+
+-  [LM35 Sensor Driver](https://github.com/DoaaTawfik0/Automated-Greenhouse-Project/tree/main/HAL/LM35)
+  
+- [Soil Moisture Sensor Driver](https://github.com/DoaaTawfik0/Automated-Greenhouse-Project/tree/main/HAL/Soil_Moisture)
+  
+- [LDR Sensor Driver](https://github.com/DoaaTawfik0/Automated-Greenhouse-Project/tree/main/HAL/LDR)
+  
+- [LCD Display Driver](https://github.com/DoaaTawfik0/Automated-Greenhouse-Project/tree/main/HAL/Character_LCD)
+
 ## Usage
 - Once the system is set up, it will automatically monitor and control the greenhouse environment.
 - Regularly check the sensors and actuators to ensure they are functioning correctly.
@@ -53,8 +61,13 @@ The Greenhouse Project is an embedded system designed to automate the control of
 ## Contributing
 - Contributions to improve the project are welcome. Please fork the repository and submit a pull request with your changes.
 
-
+## License
+- This project is licensed under the MIT License. See the LICENSE file for more details.
 
 ---
 
 Feel free to customize this README file further to fit your specific project details! If you have any other questions or need additional help, just let me know. 😊
+
+
+
+
